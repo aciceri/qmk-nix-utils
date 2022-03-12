@@ -9,9 +9,13 @@
 }:
 
 let
-  shell-hook-pre-message = ''
-    Generating ${qmk-home}, please wait...
-  '';
+  shell-hook-pre-message = already-initialized:
+    if already-initialized then ''
+      Local ${qmk-home} already exists and will be used.
+      If you want to regenerate it, delete it and enter this shell again.
+    '' else ''
+      Generating ${qmk-home}, please wait...
+    '';
 
   shell-hook-post-message = ''
     
@@ -21,7 +25,7 @@ let
 
     Although you can use directly use qmk, building and flashing the firmware with nix is recommended.
     To build the firmware: nix build
-    To flash the firmware: nix run .#flash
+    To flash the firmware: nix run .#flash (or simply "nix run")
 
   '';
 in
@@ -73,17 +77,24 @@ mkShell {
   QMK_HOME = qmk-home;
 
   shellHook = ''
-    echo "${shell-hook-pre-message}"
+    if [ -d "$QMK_HOME" ]; then
 
-    chmod --silent -R u+w $QMK_HOME
-    rm -rf $QMK_HOME
-    mkdir -p $QMK_HOME
-    
-    cp -rn ${qmk-firmware-source}/* $QMK_HOME
-    chmod -R 755 $QMK_HOME
-    cd $QMK_HOME/keyboards
-    ln -sf ../../src ${keyboard-name}
-    cd ../..
+      echo "${shell-hook-pre-message true }"
+
+    else
+
+      echo "${shell-hook-pre-message false }"
+      chmod --silent -R u+w $QMK_HOME
+      rm -rf $QMK_HOME
+      mkdir -p $QMK_HOME
+      
+      cp -rn ${qmk-firmware-source}/* $QMK_HOME
+      chmod -R 755 $QMK_HOME
+      cd $QMK_HOME/keyboards
+      ln -sf ../../src ${keyboard-name}
+      cd ../..
+
+    fi
 
     # Prevent the avr-gcc wrapper from picking up host GCC flags
     # like -iframework, which is problematic on Darwin
@@ -92,3 +103,4 @@ mkShell {
     echo "${shell-hook-post-message}"
   '';
 }
+

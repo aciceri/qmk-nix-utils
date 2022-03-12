@@ -24,5 +24,6 @@
       in
       {
         inherit utils-factory;
-      });
+      }
+    );
 }

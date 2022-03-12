@@ -2,6 +2,7 @@
 { firmware-path
 , keyboard-name
 , keymap-name
+, flash-command ? null
 , extra-build-inputs ? [ ]
 , qmk-firmware-source ? qmk-firmware-default-source
 , avr ? true
@@ -15,6 +16,7 @@ let
     name = "qmk-with-keyboard-src";
     src = qmk-firmware-source;
     phases = [ "installPhase" ];
+
     installPhase = ''
       mkdir "$out"
       cp -r "$src"/* "$out"
@@ -38,9 +40,19 @@ let
     '';
     installPhase = ''
       mkdir $out
-      cp ${keyboard-name}_${keymap-name}.hex $out
+      cp -r .build/* $out
     '';
   };
+
+  flasher =
+    if builtins.isNull flash-command
+    then builtins.throw "You need to pass a \"flash-command\" to \"utils-factory\""
+    else
+      pkgs.writeShellScriptBin "qmk-flasher" ''
+        HEX_FILE=${hex}/${keyboard-name}_${keymap-name}.hex
+        
+        ${flash-command}
+      '';
 
   dev-shell = import ./dev-shell.nix {
     inherit pkgs qmk-firmware-source keyboard-name firmware-path avr arm teensy;
@@ -48,6 +60,6 @@ let
 
 in
 {
-  inherit qmk-src hex dev-shell;
+  inherit hex flasher dev-shell;
 }
 
