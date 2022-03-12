@@ -1,0 +1,79 @@
+This [[https://nixos.wiki/wiki/Flakes][flake]] exposes a set of utilities to manage
+[[https://qmk.fm/][QMK]] firmwares as stand-alone repositories (possibly flakes) using Nix.
+
+* Usage
+The flake has only one single output i.e. ~utils-factory~ which takes the following parameters:
+
+#+begin_src nix
+  src # local path with the firmware source (the directory normally inside $QMK_HOME/keyboards/)
+, keyboard-name # name of the keyboard (the name of the directory inside $QMK_HOME/keyboards/)
+, keymap-name # name of the keymap
+, flash-command ? null # needed only for flashing using the "flasher" output
+, extra-build-inputs ? [ ] # extra dependencies needed during the build
+, qmk-firmware-source ? qmk-firmware-default-source # the "qmk_firmware" that will be used
+, avr ? true # these may be needed according the target architecture (used in the devShell)
+, arm ? true
+, teensy ? true
+#+end_src
+
+The following parameters may require a better explanation:
+
+** ~flash-script~
+It's a string containing a bash script that flash the firmare on the device.
+The ~$HEX_FILE~ variable is accessible in the script and its value is the path of
+the compiled binary (~.hex~) firmware.
+
+If you don't pass ~flash-script~ you will not be able to use the ~flasher~ ouput.
+
+An example to flash ~atmega32u4~:
+
+#+begin_src bash
+echo -n "Press the RESET button..."
+
+while [ ! -e /dev/ttyACM0 ]
+do
+    echo -n "."
+    sleep 0.5
+done
+
+${pkgs.avrdude}/bin/avrdude -p atmega32u4 -c avr109 -P /dev/ttyACM0 -U flash:w:$HEX_FILE
+#+end_src
+
+** ~qmk-firmware-source~
+The [[https://github.com/qmk/qmk_firmware][qmk_firmware]] repository internally cloned,
+the default value is the one defined in the [[utils/qmk-firmware.json]] file.
+If you want you can override this value passing another version, or, for example if you want
+to use the QMK fork with [[https://get.vial.today/][Vial]] you could use:
+
+#+begin_src nix
+qmk-vial-source = pkgs.fetchFromGitHub {
+    owner = "vial-kb";
+    repo = "vial-qmk";
+    rev = "adef73a79068c538161268dbda67f0681468a782";
+    sha256 = "sha256-kGdNyMMMnYjglU9QeFrSHdZHEM7KX2Om84PYBQZbSQg=";
+    fetchSubmodules = true;
+};
+#+end_src
+
+
+However, ~utils-factory~ returns an attrset (called ~utils~) containing the following utilities:
+
+** ~hex~
+This derivation contains the compiled `.hex` binary.
+
+** ~flasher~
+This application is a shell script that flash the firmware. It simply executes the ~flash-script~.
+parameterizing it with the firmare binary.
+The logic to manage any waiting for the device to be ready to be flashed must be part of ~flash-script~.
+
+** ~dev-shell~
+If this flake is used in its turn by another flake, it's possible to set the ~devShell~ output as this
+~dev-shell~ to have fast development environment (with ~nix develop~).
+This is done by making the shell automatically clone a copy of ~qmk-firmare-source~ locally (~.qmk_firmware/~)
+and linking the firmware source directory to ~./qmk_firmware/keyboards/<keyboard-name>~.
+
+* Examples
+
+You can see this utilities in action in my [[https://github.com/aciceri/macropad][macropad repository]].
+
+If your project uses this flake, please make a PR to add your example of use here.

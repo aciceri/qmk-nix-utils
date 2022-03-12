@@ -1,8 +1,8 @@
 { pkgs, qmk-firmware-default-source, ... }:
-{ firmware-path
+{ src
 , keyboard-name
 , keymap-name
-, flash-command ? null
+, flash-script ? null
 , extra-build-inputs ? [ ]
 , qmk-firmware-source ? qmk-firmware-default-source
 , avr ? true
@@ -11,6 +11,7 @@
 }:
 with pkgs.stdenv;
 let
+  firmware-path = src;
 
   qmk-with-keyboard-src = mkDerivation {
     name = "qmk-with-keyboard-src";
@@ -45,13 +46,13 @@ let
   };
 
   flasher =
-    if builtins.isNull flash-command
+    if builtins.isNull flash-script
     then builtins.throw "You need to pass a \"flash-command\" to \"utils-factory\""
     else
-      pkgs.writeShellScriptBin "qmk-flasher" ''
+      pkgs.writeShellScriptBin "flasher" ''
         HEX_FILE=${hex}/${keyboard-name}_${keymap-name}.hex
         
-        ${flash-command}
+        ${flash-script}
       '';
 
   dev-shell = import ./dev-shell.nix {
