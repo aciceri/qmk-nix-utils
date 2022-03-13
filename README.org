@@ -5,6 +5,7 @@ This [[https://nixos.wiki/wiki/Flakes][flake]] exposes a set of utilities to man
 The flake has only one single output i.e. ~utils-factory~ which takes the following parameters:
 
 #+begin_src nix
+{
   src # local path with the firmware source (the directory normally inside $QMK_HOME/keyboards/)
 , keyboard-name # name of the keyboard (the name of the directory inside $QMK_HOME/keyboards/)
 , keymap-name # name of the keymap
@@ -14,6 +15,7 @@ The flake has only one single output i.e. ~utils-factory~ which takes the follow
 , avr ? true # these may be needed according the target architecture (used in the devShell)
 , arm ? true
 , teensy ? true
+}
 #+end_src
 
 The following parameters may require a better explanation:
@@ -46,13 +48,14 @@ If you want you can override this value passing another version, or, for example
 to use the QMK fork with [[https://get.vial.today/][Vial]] you could use:
 
 #+begin_src nix
-qmk-vial-source = pkgs.fetchFromGitHub {
-    owner = "vial-kb";
-    repo = "vial-qmk";
-    rev = "adef73a79068c538161268dbda67f0681468a782";
-    sha256 = "sha256-kGdNyMMMnYjglU9QeFrSHdZHEM7KX2Om84PYBQZbSQg=";
-    fetchSubmodules = true;
-};
+# qmk-vial-source =
+pkgs.fetchFromGitHub {
+  owner = "vial-kb";
+  repo = "vial-qmk";
+  rev = "adef73a79068c538161268dbda67f0681468a782";
+  sha256 = "sha256-kGdNyMMMnYjglU9QeFrSHdZHEM7KX2Om84PYBQZbSQg=";
+  fetchSubmodules = true;
+}
 #+end_src
 
 
