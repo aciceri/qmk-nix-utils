@@ -47,7 +47,7 @@ let
 
   flasher =
     if builtins.isNull flash-script
-    then builtins.throw "You need to pass a \"flash-command\" to \"utils-factory\""
+    then builtins.throw "You need to pass a \"flash-script\" to \"utils-factory\""
     else
       pkgs.writeShellScriptBin "flasher" ''
         HEX_FILE=${hex}/${keyboard-name}_${keymap-name}.hex
