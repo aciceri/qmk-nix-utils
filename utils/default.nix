@@ -5,6 +5,7 @@
 , flash-script ? null
 , extra-build-inputs ? [ ]
 , qmk-firmware-source ? qmk-firmware-default-source
+, type ? "keyboard"
 , avr ? true
 , arm ? true
 , teensy ? true
@@ -18,13 +19,18 @@ let
     src = qmk-firmware-source;
     phases = [ "installPhase" ];
 
-    installPhase = ''
+    installPhase = let
+      target_dir = if type == "keyboard" then
+        "$out/keyboards"
+      else if type == "keymap" then
+        "$out/keyboards/${keyboard-name}/keymaps"
+      else throw "The only values valid for type are 'keyboard' and 'keymap'.";
+    in ''
       mkdir "$out"
       cp -r "$src"/* "$out"
-      KEYBOARDS_DIR=$out/keyboards
-      chmod +w $KEYBOARDS_DIR
-      cp -r ${firmware-path} $KEYBOARDS_DIR/${keyboard-name}
-      chmod -w $KEYBOARDS_DIR
+      chmod +w ${target_dir}
+      cp -r ${firmware-path} ${target_dir}/${keymap-name}
+      chmod -w ${target_dir}
     '';
   };
 
@@ -50,7 +56,7 @@ let
     then builtins.throw "You need to pass a \"flash-command\" to \"utils-factory\""
     else
       pkgs.writeShellScriptBin "flasher" ''
-        HEX_FILE=${hex}/${keyboard-name}_${keymap-name}.hex
+        HEX_FILE=$(find ${hex}/ -type f -name "*.hex" | head -n 1)
         
         ${flash-script}
       '';
