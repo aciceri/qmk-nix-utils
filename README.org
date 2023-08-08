@@ -9,7 +9,7 @@ The flake has only one single output i.e. ~utils-factory~ which takes the follow
   src # local path with the firmware source (the directory normally inside $QMK_HOME/keyboards/)
 , keyboard-name # name of the keyboard (the name of the directory inside $QMK_HOME/keyboards/)
 , keymap-name # name of the keymap
-, flash-command ? null # needed only for flashing using the "flasher" output
+, flash-script ? null # needed only for flashing using the "flasher" output
 , extra-build-inputs ? [ ] # extra dependencies needed during the build
 , qmk-firmware-source ? qmk-firmware-default-source # the "qmk_firmware" that will be used
 , avr ? true # these may be needed according the target architecture (used in the devShell)
